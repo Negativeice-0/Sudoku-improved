@@ -1,0 +1,161 @@
+The **first Sudoku solver** I generated indeed uses the **backtracking algorithm**. Let's delve into its characteristics and compare it to other solving algorithms:
+
+1. **Backtracking Algorithm**:
+   - The backtracking algorithm is a **brute force search** method.
+   - It explores all possible solutions by recursively trying different numbers for each empty cell.
+   - If a number leads to a dead end (violates Sudoku rules), it backtracks and tries another number.
+   - **Advantages**:
+     - A solution is **guaranteed** (as long as the puzzle is valid).
+     - Solving time is mostly **unrelated to the degree of difficulty**.
+   - **Limitations**:
+     - It can be slow for large puzzles due to combinatorial explosion.
+     - It checks every possibility, even if some cells have unique solutions.
+
+2. **Dancing Links (Algorithm X)**:
+   - The **Dancing Links** algorithm, based on **exact cover problems**, can efficiently solve Sudoku puzzles.
+   - It's an **optimized backtracking algorithm** that uses a data structure called the **doubly linked matrix**.
+   - **Advantages**:
+     - It can handle large puzzles efficiently.
+     - It exploits the structure of the problem to prune possibilities.
+     - It's used for solving other combinatorial problems as well.
+   - **Limitations**:
+     - Implementing it is more complex than basic backtracking.
+     - Requires additional data structures.
+
+3. **Human Algorithm (Heuristic Techniques)**:
+   - Humans often use **heuristic techniques** to solve Sudoku puzzles.
+   - These techniques include **elimination**, **naked pairs/triples**, **hidden singles**, and **cross-hatching**.
+   - **Advantages**:
+     - Faster for humans due to pattern recognition.
+     - Can solve easy to moderately difficult puzzles efficiently.
+   - **Limitations**:
+     - May not work for extremely difficult or non-standard puzzles.
+     - Not guaranteed to find a solution.
+
+4. **Efficiency Comparison**:
+   - The **Dancing Links** algorithm is more efficient than basic backtracking for large puzzles.
+   - For standard 9x9 Sudoku puzzles, both backtracking and Dancing Links work well.
+   - **Human techniques** are fast for easy puzzles but may struggle with harder ones.
+
+In summary, while the backtracking algorithm is simple and effective, more advanced techniques like Dancing Links can handle larger puzzles efficiently. The choice depends on the specific requirements and the desired trade-off between simplicity and performance. 🧩🔍
+
+¹: [Sudoku solving algorithms - Wikipedia](https://en.wikipedia.org/wiki/Sudoku_solving_algorithms)
+
+Source: Conversation with Bing, 11/2/2024
+(1) Sudoku solving algorithms - Wikipedia. https://en.wikipedia.org/wiki/Sudoku_solving_algorithms.
+(2) Analysis and comparison of solving algorithms for sudoku - DiVA. http://www.diva-portal.org/smash/get/diva2:811020/FULLTEXT01.pdf.
+(3) GitHub - Bathlamos/Sudoku-Solver: A comparative study of Sudoku solving .... https://github.com/Bathlamos/Sudoku-Solver.
+(4) GitHub - TugcaEker/SudokuSolver-AlgorithmComparison: Comparative .... https://github.com/TugcaEker/SudokuSolver-AlgorithmComparison.
+(5) Algorithm to Solve Sudoku | Sudoku Solver - GeeksforGeeks. https://www.geeksforgeeks.org/sudoku-backtracking-7/.
+
+package main
+
+import (
+	"fmt"
+	"os"
+	"github.com/thomasjungblut/go-dancing-links"
+)
+
+func main() {
+	// Read the Sudoku puzzle from the command line.
+	args := os.Args[1:]
+	if len(args) != 9 {
+		fmt.Println("Error")
+		return
+	}
+
+	// Convert input to a binary matrix.
+	matrix := dancinglinks.NewMatrix()
+	for row, line := range args {
+		if len(line) != 9 || !isValidInput(line) {
+			fmt.Println("Invalid input. Please enter 9 characters ('1'-'9' or '.') per line.")
+			return
+		}
+		for col, c := range line {
+			if c != '.' {
+				matrix.AppendRow(row*9+col, []int{int(c - '1')})
+			} else {
+				for num := 0; num < 9; num++ {
+					matrix.AppendRow(row*9+col, []int{num})
+				}
+			}
+		}
+	}
+
+	// Solve the Sudoku using Dancing Links.
+	solution := matrix.Solve()
+	if solution == nil {
+		fmt.Println("No solution found.")
+		return
+	}
+
+	// Print the filled Sudoku board.
+	printBoard(solution)
+}
+
+func isValidInput(input string) bool {
+	for _, c := range input {
+		if c != '.' && (c < '1' || c > '9') {
+			return false
+		}
+	}
+	return true
+}
+
+func printBoard(solution []int) {
+	for i, num := range solution {
+		fmt.Print(num + 1)
+		if (i+1)%9 == 0 {
+			fmt.Println()
+		}
+	}
+}
+
+// Example usage:
+// $ go run . ".96.4...1" "1...6...4" "5.481.39." "..795..43" ".3..8...." "4.5.23.18" ".1.63..59" ".59.7.83." "..359...7"
+// Output: Solved Sudoku board
+
+
+Certainly! Let's refactor the Sudoku solver to use **human-solving techniques**. These techniques mimic how humans approach Sudoku puzzles. I'll focus on some of the simpler strategies that you can use to solve puzzles step by step.
+
+1. **Pencil Marking (Candidates)**:
+   - Humans often write down possible candidates (numbers) in empty cells.
+   - For each cell, consider the numbers that can fit based on row, column, and box constraints.
+   - If only one candidate remains for a cell, it's a valid placement.
+   - Repeat this process until no more single candidates can be found.
+
+2. **Hidden Pairs and Naked Pairs**:
+   - **Hidden Pairs**:
+     - Look for two cells in the same row, column, or box with the same two candidates.
+     - Eliminate those candidates from other cells in the same row, column, or box.
+   - **Naked Pairs**:
+     - Find two cells in the same row, column, or box with exactly the same two candidates.
+     - Remove those candidates from other cells in the same row, column, or box.
+
+3. **Hidden and Naked Triples**:
+   - Similar to pairs but with three candidates.
+   - Look for three cells in the same row, column, or box with the same three candidates.
+   - Eliminate those candidates from other cells in the same row, column, or box.
+
+4. **Cross-Hatching**:
+   - Examine each row, column, and box.
+   - If a number is missing in a row, column, or box, check if it can fit in any empty cell.
+   - If only one cell can accommodate that number, place it there.
+
+5. **Advanced Techniques**:
+   - Techniques like **X-Wing**, **XY-Chain**, and **Unique Rectangles** are more complex.
+   - They involve patterns and interdependencies between cells.
+   - These techniques are used for harder puzzles.
+
+Remember that human-solving techniques require practice and pattern recognition. Start with simpler strategies and gradually move to more advanced ones as you gain experience. Let's apply these techniques to the Sudoku puzzle! 🧩
+
+Source: Conversation with Bing, 11/2/2024
+(1) Sudoku solving algorithms - Wikipedia. https://en.wikipedia.org/wiki/Sudoku_solving_algorithms.
+(2) HoDoKu - Sudoku generator/solver/trainer/analyzer. https://hodoku.sourceforge.net/.
+(3) ML-based algorithm/software for solving a sudoku puzzle a human way. https://ai.stackexchange.com/questions/37741/ml-based-algorithm-software-for-solving-a-sudoku-puzzle-a-human-way.
+(4) Mathematics and Sudokus: Solving Algorithms (I) - Cornell University. https://pi.math.cornell.edu/~mec/Summer2009/meerkamp/Site/Solving_any_Sudoku_I.html.
+(5) Algorithm to Solve Sudoku | Sudoku Solver - GeeksforGeeks. https://www.geeksforgeeks.org/sudoku-backtracking-7/.
+(6) List of Sudoku Solving Techniques Worth Mastering. https://masteringsudoku.com/sudoku-solving-techniques/.
+(7) Super Sudoku - Advanced Sudoku Solving Techniques and Tips. https://supersudoku.com/play/techniques/advanced/.
+(8) Techniques - Sudoku Of The Day. https://www.sudokuoftheday.com/techniques.
+(9) 6 Advanced Sudoku Strategies explained - SudokuOnline.io. https://www.sudokuonline.io/tips/advanced-sudoku-strategies.
